@@ -1,4 +1,6 @@
-﻿namespace MlMath.Tests
+﻿using System.Diagnostics;
+
+namespace MlMath.Tests
 {
     [TestClass()]
     public class MatrixTests
@@ -6,11 +8,11 @@
         [TestMethod]
         public void MatrixTest()
         {
-            using var gpu = new Gpu(); 
+            using var gpu = new Gpu();
             var testObject = gpu.GetOrCreate("t", 3, 4).Fill(
                 00, 01, 02,
                 10, 11, 12,
-                20, 21, 22, 
+                20, 21, 22,
                 30, 31, 32);
             Assert.AreEqual(00, testObject.Current[0, 0]);
             Assert.AreEqual(32, testObject.Current[2, 3]);
@@ -45,18 +47,76 @@
                 2);
             var b = gpu.GetOrCreate("b", 2, 1);
             b.Fill(
-                3,4);
-            
+                3, 4);
+
             var result = gpu.GetOrCreate("result", 2, 2);
 
-            var t =  gpu.MulAsync(a, b, result);
-            Task.WaitAll(t);
+            await gpu.MulAsync(a, b, result);
             var r = result.Current;
 
             Assert.AreEqual(1 * 3, r[0, 0]);
             Assert.AreEqual(1 * 4, r[0, 1]);
             Assert.AreEqual(2 * 3, r[1, 0]);
             Assert.AreEqual(2 * 4, r[1, 1]);
+        }
+
+
+        [TestMethod]
+        public async Task MulLargeTest()
+        {
+            var sw = new Stopwatch();
+
+            using var gpu = new Gpu();
+            var a = gpu.GetOrCreate("a", 1000, 1000);
+            a.Fill(1);
+            var b = gpu.GetOrCreate("b", 1000, 1000);
+            b.Fill(2);
+            var result = gpu.GetOrCreate("result", 1000, 1000);
+
+            sw.Start();
+            var t = gpu.MulAsync(a, b, result);
+            Console.Out.WriteLine(sw.ElapsedMilliseconds);
+            var t1 = gpu.MulAsync(a, b, result);
+            Console.Out.WriteLine(sw.ElapsedMilliseconds);
+            var r = result.Current;
+            Console.Out.WriteLine(sw.ElapsedMilliseconds);
+
+
+            Assert.AreEqual(2000, r[0, 0]);
+            Assert.AreEqual(2000, r[0, 1]);
+            Assert.AreEqual(2000, r[1, 0]);
+            Assert.AreEqual(2000, r[999, 999]);
+        }
+
+        [TestMethod]
+        public async Task AsyncTest()
+        {
+            using var gpu = new Gpu();
+            var a = gpu.GetOrCreate("a", 1000, 1000);
+            a.Fill(1);
+            var b = gpu.GetOrCreate("b", 1000, 1000);
+            b.Fill(2);
+            var t1 = Task.Run(async () =>
+            {
+                for (var i = 0; i < 1000; i++)
+                {
+                    await gpu.AddAsync(a, b, a);
+                }
+            });
+            Assert.AreNotEqual(2001, a.Current[0, 0]);
+            await t1;
+
+            var r = a.Current;
+            Assert.AreEqual(2001, r[0, 0]);
+            Assert.AreEqual(2001, r[0, 1]);
+            Assert.AreEqual(2001, r[1, 0]);
+            Assert.AreEqual(2001, r[999, 999]);
+        }
+
+        [AssemblyCleanup()]
+        public static void AssemblyCleanup()
+        {
+            Gpu.Close();
         }
     }
 }
