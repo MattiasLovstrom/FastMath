@@ -1,8 +1,9 @@
 ﻿using System.Diagnostics;
+using FastMath;
 
-namespace MlMath.Tests
+namespace FastMathTests
 {
-    [TestClass()]
+    [TestClass]
     public class MatrixTests
     {
         [TestMethod]
@@ -60,7 +61,6 @@ namespace MlMath.Tests
             Assert.AreEqual(2 * 4, r[1, 1]);
         }
 
-
         [TestMethod]
         public async Task MulLargeTest()
         {
@@ -117,7 +117,7 @@ namespace MlMath.Tests
             Assert.AreEqual(2001, r[999, 999]);
         }
 
-        [AssemblyCleanup()]
+        [AssemblyCleanup]
         public static void AssemblyCleanup()
         {
             Gpu.Close();

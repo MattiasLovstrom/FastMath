@@ -1,7 +1,7 @@
 ﻿using ILGPU;
 using ILGPU.Runtime;
 
-namespace MlMath
+namespace FastMath
 {
     public class Matrix
     {

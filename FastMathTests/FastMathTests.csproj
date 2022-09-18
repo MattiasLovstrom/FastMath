@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MlMath\MlMath.csproj" />
+    <ProjectReference Include="..\FastMath\FastMath.csproj" />
   </ItemGroup>
 
 </Project>

@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32819.101
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MlMath", "MlMath\MlMath.csproj", "{D654DFE7-EFB8-409A-B2AC-0337DEAB51FE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastMath", "FastMath\FastMath.csproj", "{D654DFE7-EFB8-409A-B2AC-0337DEAB51FE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MlMathTests", "MlMathTests\MlMathTests.csproj", "{C8CC3ED7-E024-40B2-A346-F91CC30C57F3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastMathTests", "FastMathTests\FastMathTests.csproj", "{C8CC3ED7-E024-40B2-A346-F91CC30C57F3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
