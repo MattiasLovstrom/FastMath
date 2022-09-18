@@ -65,6 +65,7 @@ namespace MlMath.Tests
         public async Task MulLargeTest()
         {
             var sw = new Stopwatch();
+            sw.Start();
 
             using var gpu = new Gpu();
             var a = gpu.GetOrCreate("a", 1000, 1000);
@@ -72,15 +73,18 @@ namespace MlMath.Tests
             var b = gpu.GetOrCreate("b", 1000, 1000);
             b.Fill(2);
             var result = gpu.GetOrCreate("result", 1000, 1000);
-
-            sw.Start();
+            await Console.Out.WriteLineAsync($"Alloc: {sw.ElapsedMilliseconds}ms");
+            sw.Restart();
             var t = gpu.MulAsync(a, b, result);
-            Console.Out.WriteLine(sw.ElapsedMilliseconds);
+            await Console.Out.WriteLineAsync($"Mul: {sw.ElapsedMilliseconds}ms");
+            sw.Restart();
             var t1 = gpu.MulAsync(a, b, result);
-            Console.Out.WriteLine(sw.ElapsedMilliseconds);
+            await Console.Out.WriteLineAsync($"Mul: {sw.ElapsedMilliseconds}ms");
+            sw.Restart();
+            Task.WaitAll(t, t1);
             var r = result.Current;
-            Console.Out.WriteLine(sw.ElapsedMilliseconds);
-
+            sw.Restart();
+            await Console.Out.WriteLineAsync($"Result: {sw.ElapsedMilliseconds}ms");
 
             Assert.AreEqual(2000, r[0, 0]);
             Assert.AreEqual(2000, r[0, 1]);

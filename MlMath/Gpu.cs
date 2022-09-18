@@ -49,12 +49,11 @@ namespace MlMath
             Matrix matrix2,
             Matrix result)
         {
-            MatrixMultiplyKernel(
+            await Task.Run(()=> MatrixMultiplyKernel(
                 result.Buffer.Extent.ToIntIndex(),
                 matrix1.Buffer.View,
                 matrix2.Buffer.View,
-                result.Buffer.View);
-            await Accelerator.DefaultStream.SynchronizeAsync();
+                result.Buffer.View));
         }
 
         private static Action<Index2D, ArrayView2D<float, Stride2D.DenseX>, ArrayView2D<float, Stride2D.DenseX>, ArrayView2D<float, Stride2D.DenseX>> MatrixMultiplyKernel;
@@ -81,12 +80,11 @@ namespace MlMath
             Matrix matrix2,
             Matrix result)
         {
-            MatrixAddKernel(
+            await Task.Run(()=>MatrixAddKernel(
                 result.Buffer.Extent.ToIntIndex(),
                 matrix1.Buffer.View,
                 matrix2.Buffer.View,
-                result.Buffer.View);
-            await Accelerator.DefaultStream.SynchronizeAsync();
+                result.Buffer.View));
         }
 
         private static Action<Index2D, ArrayView2D<float, Stride2D.DenseX>, ArrayView2D<float, Stride2D.DenseX>, ArrayView2D<float, Stride2D.DenseX>> MatrixAddKernel;
