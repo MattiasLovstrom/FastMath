@@ -24,11 +24,9 @@ namespace FastMathTests
         {
             using var gpu = new Gpu();
             var a = gpu.GetOrCreate("a", 1, 1);
-            a.Fill(
-                1);
+            gpu.Fill(a, 1);
             var b = gpu.GetOrCreate("b", 1, 1);
-            b.Fill(
-                2);
+            gpu.Fill(b, 2);
 
             var result = gpu.GetOrCreate("result", 1, 1);
 
@@ -54,11 +52,36 @@ namespace FastMathTests
 
             await gpu.MulAsync(a, b, result);
             var r = result.Current;
-
+            //                       x  y
             Assert.AreEqual(1 * 3, r[0, 0]);
-            Assert.AreEqual(1 * 4, r[0, 1]);
-            Assert.AreEqual(2 * 3, r[1, 0]);
+            Assert.AreEqual(1 * 4, r[1, 0]);
+            Assert.AreEqual(2 * 3, r[0, 1]);
             Assert.AreEqual(2 * 4, r[1, 1]);
+        }
+
+
+        [TestMethod]
+        public async Task MulTest2()
+        {
+            using var gpu = new Gpu();
+            var a = gpu.GetOrCreate("a", 3, 2);
+            a.Fill(
+                11, 21, 31,
+                12, 22, 32);
+            var b = gpu.GetOrCreate("b", 2, 3);
+            b.Fill(
+                11, 21,
+                12, 22,
+                13, 23);
+
+            var result = gpu.GetOrCreate("result", 2, 2);
+
+            await gpu.MulAsync(a, b, result);
+            var r = result.Current;
+            Assert.AreEqual(11 * 11 + 21 * 12 + 31 * 13, r[0, 0]);
+            Assert.AreEqual(11 * 21 + 21 * 22 + 31 * 23, r[1, 0]);
+            Assert.AreEqual(12 * 11 + 22 * 12 + 32 * 13, r[0, 1]);
+            Assert.AreEqual(12 * 21 + 22 * 22 + 32 * 23, r[1, 1]);
         }
 
         [TestMethod]
@@ -73,13 +96,13 @@ namespace FastMathTests
             var b = gpu.GetOrCreate("b", 1000, 1000);
             b.Fill(2);
             var result = gpu.GetOrCreate("result", 1000, 1000);
-            await Console.Out.WriteLineAsync($"Alloc: {sw.ElapsedMilliseconds}ms");
+            Console.Out.WriteLine($"Alloc: {sw.ElapsedMilliseconds}ms");
             sw.Restart();
             var t = gpu.MulAsync(a, b, result);
-            await Console.Out.WriteLineAsync($"Mul: {sw.ElapsedMilliseconds}ms");
+            Console.Out.WriteLine($"Mul: {sw.ElapsedMilliseconds}ms");
             sw.Restart();
             var t1 = gpu.MulAsync(a, b, result);
-            await Console.Out.WriteLineAsync($"Mul: {sw.ElapsedMilliseconds}ms");
+            Console.Out.WriteLine($"Mul: {sw.ElapsedMilliseconds}ms");
             sw.Restart();
             Task.WaitAll(t, t1);
             var r = result.Current;
@@ -115,6 +138,28 @@ namespace FastMathTests
             Assert.AreEqual(2001, r[0, 1]);
             Assert.AreEqual(2001, r[1, 0]);
             Assert.AreEqual(2001, r[999, 999]);
+        }
+
+        [TestMethod]
+        public async Task VectorMulMatrixTest()
+        {
+            using var gpu = new Gpu();
+            var a = gpu.GetOrCreate("a", 10, 1);
+            gpu.Fill(a, FillMe);
+            var b = gpu.GetOrCreate("b", 9, 10);
+            gpu.Fill(b, FillMe);
+            var result = gpu.GetOrCreate("result", 9, 1);
+
+            await gpu.MulAsync(a, b, result);
+        }
+
+        private IEnumerable<float> FillMe()
+        {
+            var i = 0;
+            while (true)
+            {
+                yield return ++i;
+            }
         }
 
         [AssemblyCleanup]
