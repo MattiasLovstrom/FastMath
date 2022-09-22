@@ -21,10 +21,7 @@ namespace FastMath
 
             return this;
         }
-
-
-
-
+        
         public int Columns => (int)Buffer.Extent.X;
 
         public int Rows => (int)Buffer.Extent.Y;
@@ -36,40 +33,20 @@ namespace FastMath
         public float[,] Current => Buffer.GetAsArray2D();
         public string Name { get; set; }
 
-        //public Matrix Fill(IEnumerable<float> serializedData)
-        //{
-        //    var t = serializedData.GetEnumerator();
-        //    var data = new float[Columns, Rows];
-        //    for (int row = 0; row < Rows; row++)
-        //    {
-        //        for (int column = 0; column < Columns; column++)
-        //        {
-        //            data[column, row] = t.Current;
-        //            if (!t.MoveNext()) t.Reset();
-        //        }
-        //    }
-        //    Buffer.CopyFromCPU(data);
+        public float[] SerializedData()
+        {
+            var result = new float[Rows * Columns];
+            var data = Current;
+            for (var row = 0; row < Rows; row++)
+            {
+                for (var column = 0; column < Columns; column++)
+                {
+                    result[row*Columns+ column] = data[column, row];
+                }
+            }
 
-        //    return this;
-        //}
-        //public Matrix Fill(Func<IEnumerable<float>> serializedDataFunction)
-        //{
-        //    var serializedData = serializedDataFunction.Invoke();
-
-        //    var t = serializedData.GetEnumerator();
-        //    var data = new float[Columns, Rows];
-        //    for (int row = 0; row < Rows; row++)
-        //    {
-        //        for (int column = 0; column < Columns; column++)
-        //        {
-        //            data[column, row] = t.Current;
-        //            if (!t.MoveNext()) t.Reset();
-        //        }
-        //    }
-        //    Buffer.CopyFromCPU(data);
-
-        //    return this;
-        //}
+            return result;
+        }
 
         public override string ToString()
         {
