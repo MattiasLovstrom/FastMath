@@ -10,7 +10,8 @@ namespace FastMathTests
         public void MatrixTest()
         {
             using var gpu = new Gpu();
-            var testObject = gpu.GetOrCreate("t", 3, 4).Fill(
+            var testObject = gpu.GetOrCreate("t", 3, 4);
+            gpu.Fill(testObject,
                 00, 01, 02,
                 10, 11, 12,
                 20, 21, 22,
@@ -41,11 +42,11 @@ namespace FastMathTests
         {
             using var gpu = new Gpu();
             var a = gpu.GetOrCreate("a", 1, 2);
-            a.Fill(
+            gpu.Fill(a,
                 1,
                 2);
             var b = gpu.GetOrCreate("b", 2, 1);
-            b.Fill(
+            gpu.Fill(b,
                 3, 4);
 
             var result = gpu.GetOrCreate("result", 2, 2);
@@ -65,11 +66,11 @@ namespace FastMathTests
         {
             using var gpu = new Gpu();
             var a = gpu.GetOrCreate("a", 3, 2);
-            a.Fill(
+            gpu.Fill(a,
                 11, 21, 31,
                 12, 22, 32);
             var b = gpu.GetOrCreate("b", 2, 3);
-            b.Fill(
+            gpu.Fill(b,
                 11, 21,
                 12, 22,
                 13, 23);
@@ -92,9 +93,9 @@ namespace FastMathTests
 
             using var gpu = new Gpu();
             var a = gpu.GetOrCreate("a", 1000, 1000);
-            a.Fill(1);
+            gpu.Fill(a,1);
             var b = gpu.GetOrCreate("b", 1000, 1000);
-            b.Fill(2);
+            gpu.Fill(b, 2);
             var result = gpu.GetOrCreate("result", 1000, 1000);
             Console.Out.WriteLine($"Alloc: {sw.ElapsedMilliseconds}ms");
             sw.Restart();
@@ -120,9 +121,9 @@ namespace FastMathTests
         {
             using var gpu = new Gpu();
             var a = gpu.GetOrCreate("a", 1000, 1000);
-            a.Fill(1);
+            gpu.Fill(a,1);
             var b = gpu.GetOrCreate("b", 1000, 1000);
-            b.Fill(2);
+            gpu.Fill(b, 2);
             var t1 = Task.Run(async () =>
             {
                 for (var i = 0; i < 1000; i++)

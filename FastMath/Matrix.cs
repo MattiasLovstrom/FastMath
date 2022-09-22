@@ -5,22 +5,22 @@ namespace FastMath
 {
     public class Matrix
     {
-        public Matrix Fill(params float[] serializedData)
-        {
-            var fillPointer = 0;
-            var data = new float[Columns, Rows];
-            for (var row = 0; row < Rows; row++)
-            {
-                for (var column = 0; column < Columns; column++)
-                {
-                    data[column, row] = serializedData[fillPointer++];
-                    if (fillPointer >= serializedData.Length) fillPointer = 0;
-                }
-            }
-            Buffer.CopyFromCPU(data);
+        //public Matrix Fill(params float[] serializedData)
+        //{
+        //    var fillPointer = 0;
+        //    var data = new float[Columns, Rows];
+        //    for (var row = 0; row < Rows; row++)
+        //    {
+        //        for (var column = 0; column < Columns; column++)
+        //        {
+        //            data[column, row] = serializedData[fillPointer++];
+        //            if (fillPointer >= serializedData.Length) fillPointer = 0;
+        //        }
+        //    }
+        //    Buffer.CopyFromCPU(data);
 
-            return this;
-        }
+        //    return this;
+        //}
         
         public int Columns => (int)Buffer.Extent.X;
 
