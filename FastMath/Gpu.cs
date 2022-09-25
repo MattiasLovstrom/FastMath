@@ -6,6 +6,7 @@ namespace FastMath
     public class Gpu : IProcessor, IDisposable
     {
         private Dictionary<string, Matrix> _matrixes = new();
+        private Dictionary<string, MatrixArray> _arrays = new();
         private static readonly Context Context;
         private static readonly Accelerator Accelerator;
 
@@ -24,6 +25,13 @@ namespace FastMath
                 ArrayView2D<float, Stride2D.DenseX>,
                 ArrayView2D<float, Stride2D.DenseX>>(
                 MatrixMultiplyAcceleratedKernel);
+
+            MatrixMultiplyArrayKernel = Accelerator.LoadAutoGroupedStreamKernel<
+                Index3D,
+                ArrayView3D<float, Stride3D.DenseXY>,
+                ArrayView2D<float, Stride2D.DenseX>,
+                ArrayView3D<float, Stride3D.DenseXY>>(
+                MatrixMultiplyArrayAcceleratedKernel);
 
             MatrixAddKernel = Accelerator.LoadAutoGroupedStreamKernel<
                 Index2D,
@@ -45,6 +53,13 @@ namespace FastMath
                 float,
                 ArrayView2D<float, Stride2D.DenseX>>(
                 MatrixMulAcceleratedKernel);
+
+            MatrixMulArrayKernel = Accelerator.LoadAutoGroupedStreamKernel<
+                Index3D,
+                ArrayView3D<float, Stride3D.DenseXY>,
+                float,
+                ArrayView3D<float, Stride3D.DenseXY>>(
+                MatrixMulArrayAcceleratedKernel);
 
             MatrixPow2Kernel = Accelerator.LoadAutoGroupedStreamKernel<
                 Index2D,
@@ -71,6 +86,20 @@ namespace FastMath
             _matrixes.Add(name, matrix);
 
             return _matrixes[name];
+        }
+
+        public virtual MatrixArray GetOrCreate(string name, int columns, int rows, int length)
+        {
+            if (_matrixes.ContainsKey(name)) return _arrays[name];
+
+            var matrix = new MatrixArray
+            {
+                Name = name,
+                Buffer = Accelerator.Allocate3DDenseXY<float>(new Index3D(columns, rows, length))
+            };
+            _arrays.Add(name, matrix);
+
+            return _arrays[name];
         }
 
         public Matrix Get(string name)
@@ -116,6 +145,26 @@ namespace FastMath
             return matrix;
         }
 
+        public virtual MatrixArray Fill(MatrixArray array, params float[] serializedData)
+        {
+            var fillPointer = 0;
+            var data = new float[array.Columns, array.Rows, array.Length];
+            for (var index = 0; index < array.Length; index++)
+            {
+                for (int row = 0; row < array.Rows; row++)
+                {
+                    for (int column = 0; column < array.Columns; column++)
+                    {
+                        data[column, row, index] = serializedData[fillPointer++];
+                        if (fillPointer >= serializedData.Length) fillPointer = 0;
+                    }
+                }
+            }
+            array.Buffer.CopyFromCPU(data);
+
+            return array;
+        }
+
         public Task<Matrix> SubAsync(Matrix matrix1, Matrix matrix2, string result)
         {
             throw new NotImplementedException();
@@ -135,7 +184,7 @@ namespace FastMath
             return result;
         }
 
-        private static Action<Index2D, ArrayView2D<float, Stride2D.DenseX>, float , ArrayView2D<float, Stride2D.DenseX>> MatrixMulKernel;
+        private static Action<Index2D, ArrayView2D<float, Stride2D.DenseX>, float, ArrayView2D<float, Stride2D.DenseX>> MatrixMulKernel;
         public static void MatrixMulAcceleratedKernel(
             Index2D index,
             ArrayView2D<float, Stride2D.DenseX> matrix,
@@ -145,12 +194,36 @@ namespace FastMath
             result[index] = matrix[index] * value;
         }
 
+
+        public virtual async Task<MatrixArray> MulAsync(
+            MatrixArray matrix,
+            float value,
+            MatrixArray result)
+        {
+            await Task.Run(() => MatrixMulArrayKernel(
+                result.Buffer.Extent.ToIntIndex(),
+                matrix.Buffer.View,
+                value,
+                result.Buffer.View));
+
+            return result;
+        }
+
+        private static Action<Index3D, ArrayView3D<float, Stride3D.DenseXY>, float, ArrayView3D<float, Stride3D.DenseXY>> MatrixMulArrayKernel;
+        public static void MatrixMulArrayAcceleratedKernel(
+            Index3D index,
+            ArrayView3D<float, Stride3D.DenseXY> matrixArray,
+            float value,
+            ArrayView3D<float, Stride3D.DenseXY> resultArray)
+        {
+            resultArray[index] = matrixArray[index] * value;
+        }
         public virtual async Task<Matrix> MulAsync(
             Matrix matrix,
             Matrix matrix2,
             Matrix result)
         {
-            await Task.Run(()=> MatrixMultiplyKernel(
+            await Task.Run(() => MatrixMultiplyKernel(
                 result.Buffer.Extent.ToIntIndex(),
                 matrix.Buffer.View,
                 matrix2.Buffer.View,
@@ -178,12 +251,47 @@ namespace FastMath
             result[index] = sum;
         }
 
+        public virtual async Task<MatrixArray> MulAsync(
+           MatrixArray matrixArray,
+           Matrix matrix,
+           MatrixArray resultArray)
+        {
+            await Task.Run(() => MatrixMultiplyArrayKernel(
+                resultArray.Buffer.Extent.ToIntIndex(),
+                matrixArray.Buffer.View,
+                matrix.Buffer.View,
+                resultArray.Buffer.View));
+
+            return resultArray;
+        }
+
+        private static Action<Index3D, ArrayView3D<float, Stride3D.DenseXY>, ArrayView2D<float, Stride2D.DenseX>, ArrayView3D<float, Stride3D.DenseXY>> MatrixMultiplyArrayKernel;
+        public static void MatrixMultiplyArrayAcceleratedKernel(
+            Index3D index,
+            ArrayView3D<float, Stride3D.DenseXY> matrixArray,
+            ArrayView2D<float, Stride2D.DenseX> matrix,
+            ArrayView3D<float, Stride3D.DenseXY> resultArray)
+        {
+            var x = index.X;
+            var y = index.Y;
+            var z = index.Z;
+            var sum = 0.0f;
+            for (var i = 0; i < matrixArray.IntExtent.X; i++)
+            {
+                sum += matrixArray[new Index3D(i, y, z)] * matrix[new Index2D(x, i)];
+            }
+
+            resultArray[index] = sum;
+        }
+
+
+
         public virtual async Task<Matrix> AddAsync(
-            Matrix matrix1, 
-            Matrix matrix2, 
+            Matrix matrix1,
+            Matrix matrix2,
             Matrix result)
         {
-            await Task.Run(()=>MatrixAddKernel(
+            await Task.Run(() => MatrixAddKernel(
                 result.Buffer.Extent.ToIntIndex(),
                 matrix1.Buffer.View,
                 matrix2.Buffer.View,
