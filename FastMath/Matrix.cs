@@ -5,32 +5,29 @@ namespace FastMath
 {
     public class Matrix
     {
-        //public Matrix Fill(params float[] serializedData)
-        //{
-        //    var fillPointer = 0;
-        //    var data = new float[Columns, Rows];
-        //    for (var row = 0; row < Rows; row++)
-        //    {
-        //        for (var column = 0; column < Columns; column++)
-        //        {
-        //            data[column, row] = serializedData[fillPointer++];
-        //            if (fillPointer >= serializedData.Length) fillPointer = 0;
-        //        }
-        //    }
-        //    Buffer.CopyFromCPU(data);
-
-        //    return this;
-        //}
-        
         public int Columns => (int)Buffer.Extent.X;
 
         public int Rows => (int)Buffer.Extent.Y;
 
+        public MemoryBuffer3D<float, Stride3D.DenseXY> Buffer { get; set; }
 
-        //public float[,] Values { get; set; }
-        public MemoryBuffer2D<float, Stride2D.DenseX> Buffer { get; set; }
+        public float[,] Current
+        {
+            get
+            {
+                var data3d = Buffer.GetAsArray3D(); 
+                var result = new float[Columns, Rows];
+                for(int i = 0; i < Columns; i++)
+                {
+                    for(int j = 0; j < Rows; j++)
+                    {
+                        result[i, j] = data3d[i, j, 0];
+                    }
+                }
 
-        public float[,] Current => Buffer.GetAsArray2D();
+                return result;
+            }
+        } 
         public string Name { get; set; }
 
         public float[] SerializedData()
