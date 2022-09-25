@@ -1,15 +1,17 @@
 ﻿using ILGPU;
 using ILGPU.Runtime;
+using System;
 
 namespace FastMath
 {
-    public class MatrixArray
+    public class MatrixArray : Matrix
     {
-        public string Name { get; set; }
-        public MemoryBuffer3D<float, Stride3D.DenseXY> Buffer { get; set; }
-        public int Columns => (int)Buffer.Extent.X;
-        public int Rows => (int)Buffer.Extent.Y;
-        public int Length => (int)Buffer.Extent.Z;
+        public MatrixArray(string name, MemoryBuffer3D<float, Stride3D.DenseXY> buffer) 
+            : base(name, buffer)
+        {
+        }
+
         public float[,,] Current => Buffer.GetAsArray3D();
+
     }
 }

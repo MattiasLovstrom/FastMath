@@ -5,8 +5,8 @@ namespace FastMath
 {
     public class Gpu : IProcessor, IDisposable
     {
-        private Dictionary<string, Matrix> _matrixes = new();
-        private Dictionary<string, MatrixArray> _arrays = new();
+        private Dictionary<string, MatrixArray> _matrixes = new();
+        //private Dictionary<string, MatrixArray> _arrays = new();
         private static readonly Context Context;
         private static readonly Accelerator Accelerator;
 
@@ -76,33 +76,22 @@ namespace FastMath
 
         public virtual Matrix GetOrCreate(string name, int columns, int rows)
         {
+            return GetOrCreate(name, columns, rows, 1);
+        }
+
+        public virtual MatrixArray GetOrCreate(string name, int columns, int rows, int length)
+        {
             if (_matrixes.ContainsKey(name)) return _matrixes[name];
 
-            var matrix = new Matrix
-            {
-                Name = name,
-                Buffer = Accelerator.Allocate3DDenseXY<float>(new Index3D(columns, rows, 1))
-            };
+            var matrix = new MatrixArray(
+                name,
+                Accelerator.Allocate3DDenseXY<float>(new Index3D(columns, rows, length)));
             _matrixes.Add(name, matrix);
 
             return _matrixes[name];
         }
 
-        public virtual MatrixArray GetOrCreate(string name, int columns, int rows, int length)
-        {
-            if (_matrixes.ContainsKey(name)) return _arrays[name];
-
-            var matrix = new MatrixArray
-            {
-                Name = name,
-                Buffer = Accelerator.Allocate3DDenseXY<float>(new Index3D(columns, rows, length))
-            };
-            _arrays.Add(name, matrix);
-
-            return _arrays[name];
-        }
-
-        public Matrix Get(string name)
+        public MatrixArray? Get(string name)
         {
             if (_matrixes.ContainsKey(name)) return _matrixes[name];
 
@@ -166,11 +155,14 @@ namespace FastMath
             return array;
         }
 
+        #region Sub
         public Task<Matrix> SubAsync(Matrix matrix1, Matrix matrix2, string result)
         {
             throw new NotImplementedException();
         }
+        #endregion
 
+        #region Mul
         public virtual async Task<Matrix> MulAsync(
             Matrix matrix,
             float value,
@@ -244,7 +236,6 @@ namespace FastMath
             for (var i = 0; i < matrix1.IntExtent.X; i++)
             {
                 sum += matrix1[new Index3D(i, y,0)] * matrix2[new Index3D(x, i,0)];
-                //Interop.WriteLine("m1 {0} {1} m2 {2} {3} = {4}", x,i,i,y,sum);
             }
 
             result[index] = sum;
@@ -282,7 +273,9 @@ namespace FastMath
 
             resultArray[index] = sum;
         }
+        #endregion
 
+        #region Add
         public virtual async Task<Matrix> AddAsync(
             Matrix matrix1,
             Matrix matrix2,
@@ -306,7 +299,9 @@ namespace FastMath
         {
             result[index] = matrix1[index] + matrix2[index];
         }
+        #endregion
 
+        #region Sub
         public virtual async Task<Matrix> SubAsync(
             Matrix matrix1,
             Matrix matrix2,
@@ -330,7 +325,9 @@ namespace FastMath
         {
             result[index] = matrix1[index] - matrix2[index];
         }
+        #endregion
 
+        #region Pow2
         public virtual async Task<Matrix> Pow2Async(
             Matrix matrix,
             Matrix result)
@@ -351,7 +348,9 @@ namespace FastMath
         {
             result[index] = matrix[index] * matrix[index];
         }
-        
+        #endregion
+
+        #region Transpose
         public virtual async Task<Matrix> TransposeAsync(
             Matrix matrix,
             Matrix result)
@@ -372,6 +371,7 @@ namespace FastMath
         {
             result[new Index3D(index.Y, index.X, index.Z)] = matrix[index];
         }
+        #endregion
 
         public void Dispose()
         {

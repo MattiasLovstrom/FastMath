@@ -3,15 +3,39 @@ using ILGPU.Runtime;
 
 namespace FastMath
 {
-    public class Matrix
+    public class Matrix 
     {
-        public int Columns => (int)Buffer.Extent.X;
+        public Matrix(string name, MemoryBuffer3D<float, Stride3D.DenseXY> buffer)
+        {
+            Name = name;
+            Buffer = buffer;
+        }
 
-        public int Rows => (int)Buffer.Extent.Y;
-
+        public string Name { get; set; }
         public MemoryBuffer3D<float, Stride3D.DenseXY> Buffer { get; set; }
+        public int Columns => (int)Buffer.Extent.X;
+        public int Rows => (int)Buffer.Extent.Y;
+        public int Length => (int)Buffer.Extent.Z;
 
-        public float[,] Current
+        public float[] SerializedData()
+        {
+            var result = new float[Length * Rows * Columns];
+            var data3d = Buffer.GetAsArray3D();
+            for (var index = 0; index < Length; index++)
+            {
+                for (var row = 0; row < Rows; row++)
+                {
+                    for (var column = 0; column < Columns; column++)
+                    {
+                        result[index * Rows * Columns + row * Columns + column] = data3d[column, row, index];
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        public new float[,] Current
         {
             get
             {
@@ -28,22 +52,6 @@ namespace FastMath
                 return result;
             }
         } 
-        public string Name { get; set; }
-
-        public float[] SerializedData()
-        {
-            var result = new float[Rows * Columns];
-            var data = Current;
-            for (var row = 0; row < Rows; row++)
-            {
-                for (var column = 0; column < Columns; column++)
-                {
-                    result[row*Columns+ column] = data[column, row];
-                }
-            }
-
-            return result;
-        }
 
         public override string ToString()
         {

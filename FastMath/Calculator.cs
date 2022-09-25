@@ -12,7 +12,7 @@
 
         public static Calculator? Current => _current ??= new Calculator(new Gpu());
 
-        public Matrix Get(string name)
+        public MatrixArray? Get(string name)
         {
             return _processor.Get(name);
         }
