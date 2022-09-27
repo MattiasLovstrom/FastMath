@@ -1,4 +1,6 @@
-﻿namespace FastMath
+﻿using System.Numerics;
+
+namespace FastMath
 {
     public class Calculator
     {
@@ -9,8 +11,6 @@
         {
             _processor = processor;
         }
-
-        public static Calculator? Current => _current ??= new Calculator(new Gpu());
 
         public MatrixArray? Get(string name)
         {
@@ -32,6 +32,13 @@
             return _processor.Fill(matrix, serializedDataFunction);
         }
 
+        public async Task<Matrix> MulAsync(Matrix matrix1, Matrix matrix2)
+        {
+            var result = _processor.GetOrCreate($"{matrix1.Name}**{matrix2.Name}", matrix2.Columns, matrix1.Rows);
+
+            return await MulAsync(matrix1, matrix2, result);
+        }
+
         public async Task<Matrix> MulAsync(Matrix matrix1, Matrix matrix2, Matrix result)
         {
             if (matrix1.Columns != matrix2.Rows)
@@ -42,15 +49,35 @@
             return await _processor.MulAsync(matrix1, matrix2, result);
         }
 
+        public async Task<Matrix> MulAsync(Matrix matrix, float value)
+        {
+            var result = _processor.GetOrCreate($"{matrix.Name}*value", matrix.Columns, matrix.Rows);
+
+            return await _processor.MulAsync(matrix, value, result);
+        }
+
         public async Task<Matrix> MulAsync(Matrix matrix, float value, Matrix result)
         {
             return await _processor.MulAsync(matrix, value, result);
         }
 
+        public async Task<Matrix> AddAsync(Matrix matrix1, Matrix matrix2)
+        {
+            var result = _processor.GetOrCreate($"{matrix1.Name}+{matrix2.Name}", matrix1.Columns, matrix1.Rows);
+
+            return await AddAsync(matrix1, matrix2, result);
+        }
 
         public async Task<Matrix> AddAsync(Matrix matrix1, Matrix matrix2, Matrix result)
         {
             return await _processor.AddAsync(matrix1, matrix2, result);
+        }
+
+        public async Task<Matrix> SubAsync(Matrix matrix1, Matrix matrix2)
+        {
+            var result = _processor.GetOrCreate($"{matrix1.Name}-{matrix2.Name}", matrix1.Columns, matrix1.Rows);
+            
+            return await SubAsync(matrix1, matrix2, result);
         }
 
         public async Task<Matrix> SubAsync(Matrix matrix1, Matrix matrix2, Matrix result)
@@ -61,6 +88,13 @@
         public async Task<Matrix> Pow2Async(Matrix matrix, Matrix result)
         {
             return await _processor.Pow2Async(matrix, result);
+        }
+
+        public async Task<Matrix> TransposeAsync(Matrix matrix)
+        {
+            var result = _processor.GetOrCreate($"{matrix.Name}T", matrix.Rows, matrix.Columns);
+            
+            return await TransposeAsync(matrix, result);
         }
 
         public async Task<Matrix> TransposeAsync(Matrix matrix, Matrix result)

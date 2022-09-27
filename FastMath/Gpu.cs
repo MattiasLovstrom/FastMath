@@ -44,7 +44,7 @@ namespace FastMath
                 Index3D,
                 ArrayView3D<float, Stride3D.DenseXY>,
                 ArrayView3D<float, Stride3D.DenseXY>,
-                ArrayView3D<float, Stride3D.DenseXY> > (
+                ArrayView3D<float, Stride3D.DenseXY>>(
                 MatrixSubAcceleratedKernel);
 
             MatrixMulKernel = Accelerator.LoadAutoGroupedStreamKernel<
@@ -101,14 +101,17 @@ namespace FastMath
         public virtual Matrix Fill(Matrix matrix, params float[] serializedData)
         {
             var fillPointer = 0;
-            var data = new float[matrix.Columns, matrix.Rows, 1];
-            
-            for (int row = 0; row < matrix.Rows; row++)
+            var data = new float[matrix.Columns, matrix.Rows, matrix.Length];
+
+            for (var index = 0; index < matrix.Length; index++)
             {
-                for (int column = 0; column < matrix.Columns; column++)
+                for (var row = 0; row < matrix.Rows; row++)
                 {
-                    data[column, row, 0] = serializedData[fillPointer++];
-                    if (fillPointer >= serializedData.Length) fillPointer = 0;
+                    for (var column = 0; column < matrix.Columns; column++)
+                    {
+                        data[column, row, index] = serializedData[fillPointer++];
+                        if (fillPointer >= serializedData.Length) fillPointer = 0;
+                    }
                 }
             }
             matrix.Buffer.CopyFromCPU(data);
@@ -235,7 +238,7 @@ namespace FastMath
             var sum = 0.0f;
             for (var i = 0; i < matrix1.IntExtent.X; i++)
             {
-                sum += matrix1[new Index3D(i, y,0)] * matrix2[new Index3D(x, i,0)];
+                sum += matrix1[new Index3D(i, y, 0)] * matrix2[new Index3D(x, i, 0)];
             }
 
             result[index] = sum;
@@ -268,7 +271,7 @@ namespace FastMath
             var sum = 0.0f;
             for (var i = 0; i < matrixArray.IntExtent.X; i++)
             {
-                sum += matrixArray[new Index3D(i, y, z)] * matrix[new Index3D(x, i,0)];
+                sum += matrixArray[new Index3D(i, y, z)] * matrix[new Index3D(x, i, 0)];
             }
 
             resultArray[index] = sum;

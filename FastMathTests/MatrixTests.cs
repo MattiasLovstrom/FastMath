@@ -9,7 +9,7 @@ namespace FastMathTests
         [TestMethod]
         public void MatrixTest()
         {
-            using var gpu = new Gpu();
+            using var gpu = new GpuDebugger();
             var testObject = gpu.GetOrCreate("t", 3, 4);
             gpu.Fill(testObject,
                 00, 01, 02,
